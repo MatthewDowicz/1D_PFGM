@@ -16,8 +16,15 @@ from data import make_dataset as mkds
 def perturbed_dist_vis(batchsize, rng, zoom=False, bins=30, sigma=0.01, tau=0.03, M=291, restrict_M = True):
     """
     Function to visualize the perturbed samples in the N+1 dimension.
+
+    Args:
+    -----
+        batchsize: int
+            Number of samples to visualize.
+        zoom: bool
+            Flag to focus on the unperturbed data range.
     """
-    x, train_samps = mkds.perturb(batchsize=10000,
+    x, train_samps = mkds.perturb(batchsize=batchsize,
                                     rng = rng,
                                     sigma = sigma, 
                                     tau = tau, 
