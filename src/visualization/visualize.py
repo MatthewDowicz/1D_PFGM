@@ -13,7 +13,7 @@ import sys
 sys.path.append("../..") # ..usually means going up one directory
 from data import make_dataset as mkds
 
-def perturbed_dist_vis(batchsize, rng, zoom=False, bins=30, sigma=0.01, tau=0.03, M=291, restrict_M = True):
+def perturbed_dist_vis(batchsize, rng, zoom=False, bin_num=30, sigma=0.01, tau=0.03, M=291, restrict_M = True):
     """
     Function to visualize the perturbed samples in the N+1 dimension.
 
@@ -32,6 +32,8 @@ def perturbed_dist_vis(batchsize, rng, zoom=False, bins=30, sigma=0.01, tau=0.03
                                     restrict_M = restrict_M)
                     
     fig, ax = plt.subplots(1,2, figsize=(10,6))
+    bins = np.histogram(np.hstack((x[:,0], train_samps[:,0])), bins=bin_num)[1]
+
     if zoom:
         ax[0].hist(x[:,0], alpha=0.5, bins=bins, label='original charges (x)');
         ax[0].hist(train_samps[:,0], alpha=0.5, bins=bins, label='perturbed charges (y)');
