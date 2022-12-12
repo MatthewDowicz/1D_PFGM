@@ -1,9 +1,12 @@
 import jax
 import jax.numpy as jnp
 from jax import random
+
 from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
 
-
+import pathlib
+from pathlib import Path
+import os
 
 def rho(rng,
         batchsize: int,
@@ -122,4 +125,116 @@ def perturb(batchsize: int,
     perturbed_x = x + perturbation_x
     # Augment the data with the extra dimension, z.
     perturbed_samples_vec = jnp.concatenate((perturbed_x, perturbed_z), axis=1)
-    return x, perturbed_samples_vec                              
+    return x, perturbed_samples_vec
+
+
+def empirical_field(x,y):
+    """
+    Function to calculate the empirical (seen) Poisson Field.
+    This function does the brute force calculation of what the field
+    looks like and is the "labels" for our supervised learning problem.
+    This is the answer that we want the NN to learn to emulate.
+    Code from losses.py from:
+         https://github.com/Newbeeer/Poisson_flow/blob/main/losses.py
+    
+    Args:
+    -----
+        x: jax.DeviceArray
+            The unperturbed data. These are the samples that approximate
+            the charge distribution. Shape = (batchsize, 2). x = (x,0)
+        y: jax.DeviceArray
+            The perturbed data that have been lifted off the data hyperplane
+            in z=0. These are the training samples for the NN. 
+            Shape = (batchsize, 2). y = (x_perturbed, z)
+            
+    Returns:
+    --------
+        target: jax.DeviceArray
+            The value of the empirical field. These are the "labels" that
+            the NN will try to learn for each training sample in the N+1
+            hemisphere. Shape = (batchsize, 2). target[0] = [Ex, Ez]
+    """
+    # Get distance between vector on hyperplane (z=0) and their perturbed versions
+    # Expand dims here, so that the 2nd dim of the array isn't collapsed
+    # ie. making sure that gt_distance.shape = (batchsize, 2)
+    x = jnp.concatenate((x, jnp.zeros((len(x),1))), axis=1)
+    gt_distance = jnp.sqrt(jnp.sum((jnp.expand_dims(x, axis=1) - y) ** 2, axis=-1, keepdims=False))
+    
+    # For numerical stability, we multiply each row by its minimum value
+    # keepdims=True, so that we don't lose a dimension
+    distance = jnp.min(gt_distance, keepdims=True)[0] / (gt_distance + 1e-7)
+    distance = distance ** 2 # 2 == data_dim
+    distance = distance[:, :, None] # add an extra dim for the sum below
+
+    # Normalize the coefficients (effectively multiply by c(x_tilde))
+    # Expand dims again to avoid losing dimension because we sum on line 40    
+    coeff = distance / (jnp.sum(distance, axis=1, keepdims=True) + 1e-7)
+    diff = - ((jnp.expand_dims(y, axis=1) - x))
+    
+    # Calculate empirical Poisson Field (N+1 dimension in the augmented space)
+    gt_direction = jnp.sum(coeff * diff, axis=1, keepdims=False)
+    gt_norm = jnp.linalg.norm(gt_direction, axis=1)
+    # Normalizing the N+1-dimensional Poisson Field as in Sect. 3.2
+    gt_direction /= jnp.reshape(gt_norm, (-1,1))
+    gt_direction *= jnp.sqrt(2) # 2 == data_dim
+
+    target = gt_direction
+    return target
+
+def save_gen_data(filename: str,
+                  data: jnp.array):
+    
+    dir_path = Path(os.path.abspath(os.path.join('..')))
+    data_dir = dir_path / 'saved_data'
+    file_path = data_dir / str(filename)
+    
+    return jnp.save(file_path, data)
+
+def load_gen_data(filename: str):
+    dir_path = Path(os.path.abspath(os.path.join('..')))
+    data_dir = dir_path / 'saved_data'
+    file_path = data_dir / f'{filename}.npy'
+
+    return jnp.load(file_path)
+
+def get_NN_data(rng, samplesize, save=False, filename=''):
+    """
+    Function that outputs the necessary data to train the NN.
+    
+    Args:
+    -----
+        samplesize: int
+            Number of samples you want to create.
+        rng: PRNGkey
+            Key to allow PRNG for the creation of the data.
+        save: bool
+            Save the generated data.
+        filename: str
+            Filename of the data that will be saved
+            
+    Returns:
+    --------
+        dataloader: torch.DataLoader
+            Returns an iterable dataloader for training/evaluation containing
+            the tuple (y,E) where:
+                y: jax.DeviceArray
+                    The perturbed training samples.
+                E: jax.DeviceArray
+                    The "labels" for training. These are the empirical
+                    values of the E/poisson field.
+    """
+    x, y = perturb(batchsize=samplesize,
+                        rng = rng,
+                        sigma = 0.01, 
+                        tau = 0.03, 
+                        M = 291,
+                        restrict_M = True)
+
+    E = empirical_field(x,y)
+
+    if save == True:
+        save_gen_data(filename, (y, E))
+    else:
+        pass 
+
+    return (y, E)                            
