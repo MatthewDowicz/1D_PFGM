@@ -1,0 +1,26 @@
+{
+    "model_class": "MLPRegressor",
+    "model_hparams": {
+        "hidden_dims": [
+            64,
+            128,
+            256,
+            512,
+            256,
+            128,
+            64
+        ],
+        "output_dim": 2
+    },
+    "optimizer_hparams": {
+        "lr": 0.004,
+        "optimizer": "adam"
+    },
+    "logger_params": {
+        "base_log_dir": "/Users/matt/Desktop/UCI_Research/LSST/PFGM/1D_PFGM/saved_models"
+    },
+    "enable_progress_bar": true,
+    "debug": false,
+    "check_val_every_n_epoch": 1,
+    "seed": 42
+}
