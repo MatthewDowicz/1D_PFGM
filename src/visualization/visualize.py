@@ -13,6 +13,9 @@ import sys
 sys.path.append("../..") # ..usually means going up one directory
 from data import make_dataset as mkds
 
+from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
+
+
 def perturbed_dist_vis(batchsize, rng, zoom=False, bin_num=30, sigma=0.01, tau=0.03, M=291, restrict_M = True):
     """
     Function to visualize the perturbed samples in the N+1 dimension.
@@ -83,4 +86,19 @@ def perturb_vis(batchsize, rng):
               title='Zoom in on limits of the original samples')
     ax[1].legend()
 
+    plt.show()
+
+
+def quiver_plot(dataloader, xlim: Tuple[float, float] = (-10,10), ylim: Tuple[float, float] = (-1,10)):
+    """
+    Visualizing a batch of data via a quiver plot. The arrow direction is 
+    provided by the E-field and the coordinate for the arrow is provided
+    by the perturbed data vector.
+    """
+    batch = next(iter(dataloader))
+    imgs, labels = batch
+    plt.quiver(imgs[:,0], imgs[:,1], labels[:,0], labels[:,1], label='True Poisson Field');
+    plt.xlim(xlim[0], xlim[1])
+    plt.ylim(ylim[0], ylim[1])
+    plt.legend()
     plt.show()
