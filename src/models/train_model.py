@@ -10,6 +10,7 @@ from flax import linen as nn
 from flax.training import train_state, checkpoints
 
 from .module import TrainerModule
+
 class MLPRegressor(nn.Module):
     hidden_dims: Sequence[int]
     output_dim: int
