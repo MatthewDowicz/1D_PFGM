@@ -16,7 +16,7 @@ from data import make_dataset as mkds
 from typing import Any, Sequence, Optional, Tuple, Iterator, Dict, Callable, Union
 
 
-def perturbed_dist_vis(batchsize, rng, zoom=False, bin_num=30, sigma=0.01, tau=0.03, M=291, restrict_M = True):
+def perturbed_dist_vis(batchsize, rng, range_vals=(-1.5, 1.5), bin_num=30, sigma=0.01, tau=0.03, M=291, restrict_M = True):
     """
     Function to visualize the perturbed samples in the N+1 dimension.
 
@@ -35,24 +35,31 @@ def perturbed_dist_vis(batchsize, rng, zoom=False, bin_num=30, sigma=0.01, tau=0
                                     restrict_M = restrict_M)
                     
     fig, ax = plt.subplots(1,2, figsize=(10,6))
-    bins = np.histogram(np.hstack((x[:,0], train_samps[:,0])), bins=bin_num)[1]
+    ax[0].hist(x[:,0], alpha=0.5, range=range_vals, bins=bin_num, label='original charges (x)')
+    ax[0].hist(train_samps[:,0], alpha=0.5, range=range_vals, bins=bin_num, label='perturbed charges (y)');
+    ax[0].set(xlabel='Charge Values', ylabel='Frequency', title='Distributions of charges')
+    ax[0].legend()
+    ax[1].hist(train_samps[:,1], alpha=0.5, bins=bin_num, label='perturbed charges z-coord')
+    ax[1].set(xlabel='Distance from dist. plane', ylabel='Frequency', title='Distribution of heights in N+1 (z)')
 
-    if zoom:
-        ax[0].hist(x[:,0], alpha=0.5, bins=bins, label='original charges (x)');
-        ax[0].hist(train_samps[:,0], alpha=0.5, bins=bins, label='perturbed charges (y)');
-        ax[0].set(xlabel='Charge Values', ylabel='Frequency', title='Distributions of charges')
-        ax[0].set_xlim([-1.5, 1.5])
-        ax[0].legend()
-        ax[1].hist(train_samps[:,1], alpha=0.5, bins=bins, label='perturbed charges z-coord')
-        ax[1].set(xlabel='Distance from dist. plane', ylabel='Frequency', title='Distribution of heights in N+1 (z)')
+    # bins = np.histogram(np.hstack((x[:,0], train_samps[:,0])), bins=bin_num)[1]
 
-    else:
-        ax[0].hist(x[:,0], alpha=0.5, bins=bins, label='original charges (x)');
-        ax[0].hist(train_samps[:,0], alpha=0.5, bins=bins, label='perturbed charges (y)');
-        ax[0].set(xlabel='Charge Values', ylabel='Frequency', title='Distributions of charges')
-        ax[0].legend()
-        ax[1].hist(train_samps[:,1], alpha=0.5, bins=bins, label='perturbed charges z-coord')
-        ax[1].set(xlabel='Distance from dist. plane', ylabel='Frequency', title='Distribution of heights in N+1 (z)')
+    # if zoom:
+    #     ax[0].hist(x[:,0], alpha=0.5, bins=bins, label='original charges (x)');
+    #     ax[0].hist(train_samps[:,0], alpha=0.5, bins=bins, label='perturbed charges (y)');
+    #     ax[0].set(xlabel='Charge Values', ylabel='Frequency', title='Distributions of charges')
+    #     ax[0].set_xlim([-1.5, 1.5])
+    #     ax[0].legend()
+    #     ax[1].hist(train_samps[:,1], alpha=0.5, bins=bins, label='perturbed charges z-coord')
+    #     ax[1].set(xlabel='Distance from dist. plane', ylabel='Frequency', title='Distribution of heights in N+1 (z)')
+
+    # else:
+    #     ax[0].hist(x[:,0], alpha=0.5, bins=bins, label='original charges (x)');
+    #     ax[0].hist(train_samps[:,0], alpha=0.5, bins=bins, label='perturbed charges (y)');
+    #     ax[0].set(xlabel='Charge Values', ylabel='Frequency', title='Distributions of charges')
+    #     ax[0].legend()
+    #     ax[1].hist(train_samps[:,1], alpha=0.5, bins=bins, label='perturbed charges z-coord')
+    #     ax[1].set(xlabel='Distance from dist. plane', ylabel='Frequency', title='Distribution of heights in N+1 (z)')
 
     plt.show()
 
